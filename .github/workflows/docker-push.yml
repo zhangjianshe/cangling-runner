@@ -1,0 +1,37 @@
+name: Build and Push on Tag
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger only when a tag starting with 'v' is pushed
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: harbor.cangling.cn:22002
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build and Push Multi-Arch
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          # Use github.ref_name to get the tag (e.g., v1.0.1)
+          tags: |
+            harbor.cangling.cn:22002/cangling/cangling-runner:latest
+            harbor.cangling.cn:22002/cangling/cangling-runner:${{ github.ref_name }}

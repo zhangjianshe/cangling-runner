@@ -19,8 +19,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # 3. Upgrade pip and install kafka-python
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir kafka-python==2.2.15 \
-    pip install --no-cache-dir cangling-ai==0.1.7
+    pip install --no-cache-dir kafka-python==2.2.15  cangling-ai==0.1.7
 
 # Set the working directory
 WORKDIR /app

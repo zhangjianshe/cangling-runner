@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # 5. 安装你自己的库 (0.1.7 版本)
 # 如果 cangling-ai 在公有 PyPI 上，直接安装；
 # 如果是本地文件，请先 COPY 进去再安装：COPY dist/*.whl /tmp/
-RUN pip install --no-cache-dir cangling-ai==0.1.8
+RUN pip install --no-cache-dir cangling-ai==0.1.9
 
 # 6. 关键：设置 Python 刷新缓冲区
 # 这样 loguru 的日志才能实时显示在 K8S 的 xterm.js 终端中

@@ -26,7 +26,7 @@ RUN /opt/conda/envs/$CONDA_ENV/bin/pip install --no-cache-dir --upgrade pip && \
     loguru==0.7.3
 
 # 5. Install Custom Private/Public Package
-RUN /opt/conda/envs/$CONDA_ENV/bin/pip install --no-cache-dir cangling-ai==0.1.15
+RUN /opt/conda/envs/$CONDA_ENV/bin/pip install --no-cache-dir cangling-ai==0.1.17
 
 # 6. CRITICAL K3S SYMLINKS
 # This forces external K3s executors to hit your conda environment packages seamlessly

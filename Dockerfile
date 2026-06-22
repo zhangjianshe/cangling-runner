@@ -1,41 +1,45 @@
-# 使用 Alpine 3.19
-FROM alpine:3.19
+# 1. Use the official Miniconda3 base image
+FROM continuumio/miniconda3:latest
 
-# 1. 安装系统依赖 + 时区工具
-RUN apk add --no-cache \
+# 2. Set Timezone and Install System Dependencies
+ENV TZ=Asia/Shanghai
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
-    iputils \
-    python3 \
-    py3-pip \
-    tzdata  # 用于设置时区
+    iputils-ping \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 2. 设置时区为上海
-ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# 3. Create Conda Environment and Install GDAL
+ENV CONDA_ENV=canglingenv
+RUN conda create -n $CONDA_ENV -c conda-forge python=3.11 gdal -y
 
-# 3. 创建并激活虚拟环境
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Set the path so that the conda environment is active by default
+ENV PATH /opt/conda/envs/$CONDA_ENV/bin:$PATH
 
-# 4. 安装依赖
-# 建议先安装基础依赖，再安装你自己的私有库
+# 4. Install Pip Dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
     kafka-python==2.0.2 \
     loguru==0.7.3
 
-# 5. 安装你自己的库 (0.1.7 版本)
-# 如果 cangling-ai 在公有 PyPI 上，直接安装；
-# 如果是本地文件，请先 COPY 进去再安装：COPY dist/*.whl /tmp/
-RUN pip install --no-cache-dir cangling-ai==0.1.13
+# 5. Install Custom Private/Public Package
+RUN pip install --no-cache-dir cangling-ai==0.1.15
 
-# 6. 关键：设置 Python 刷新缓冲区
-# 这样 loguru 的日志才能实时显示在 K8S 的 xterm.js 终端中
+# 6. Environment Settings
 ENV PYTHONUNBUFFERED=1
-
 WORKDIR /app
 
-# 默认启动 shell，方便调试
-CMD ["/bin/sh"]
+# Configure shell to automatically activate conda for interactive sessions
+RUN echo "conda activate $CONDA_ENV" >> ~/.bashrc
+
+# 7. Add Startup Script
+# Copy the script, make it executable, and define it as the Entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default command passed to the entrypoint
+CMD ["/bin/bash"]
